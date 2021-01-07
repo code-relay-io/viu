@@ -1,4 +1,5 @@
 use clap::{value_t, ArgMatches};
+use std::time::Duration;
 use viuer::Config as ViuerConfig;
 
 pub struct Config<'a> {
@@ -10,6 +11,7 @@ pub struct Config<'a> {
     pub recursive: bool,
     pub static_gif: bool,
     pub viuer_config: ViuerConfig,
+    pub frame_duration: Option<Duration>,
 }
 
 impl<'a> Config<'a> {
@@ -41,10 +43,16 @@ impl<'a> Config<'a> {
             width,
             height,
             absolute_offset: false,
-            kitty_delete: true,
             ..Default::default()
         };
 
+        let frame_duration = if matches.is_present("frames-per-second") {
+            let frame_rate =
+                value_t!(matches, "frames-per-second", f32).unwrap_or_else(|e| e.exit());
+            Some(Duration::from_secs_f32(1.0 / frame_rate))
+        } else {
+            None
+        };
         Config {
             files,
             loop_gif,
@@ -54,6 +62,7 @@ impl<'a> Config<'a> {
             recursive: matches.is_present("recursive"),
             static_gif,
             viuer_config,
+            frame_duration,
         }
     }
     #[cfg(test)]
@@ -68,8 +77,10 @@ impl<'a> Config<'a> {
             static_gif: false,
             viuer_config: ViuerConfig {
                 absolute_offset: false,
+                use_kitty: false,
                 ..Default::default()
             },
+            frame_duration: None,
         }
     }
 }
