@@ -137,36 +137,37 @@ fn view_file(conf: &Config, filename: &str, (tx, rx): TxRx) -> ViuResult {
     {
         viuer::print_from_file(filename, &conf.viuer_config)?;
     }
-    //If the file is a gif, let sixel handle it natively, but
-    //we have to handle the ctrc manually because the sixel encoder
-    //is will block the thread.
-    else if viuer::get_sixel_support() != viuer::SixelSupport::None
-        && (image::guess_format(&format_guess_buf[..])?) == image::ImageFormat::Gif
-    {
-        let mut stdout = std::io::stdout();
-        if conf.viuer_config.restore_cursor {
-            execute!(&mut stdout, crossterm::cursor::SavePosition)?;
-        }
-        let s = std::string::String::from(filename);
+    // //If the file is a gif, let sixel handle it natively, but
+    // //we have to handle the ctrc manually because the sixel encoder
+    // //is will block the thread.
+    // else if viuer::get_sixel_support() != viuer::SixelSupport::None
+    //     && (image::guess_format(&format_guess_buf[..])?) == image::ImageFormat::Gif
+    // {
+    //     let mut stdout = std::io::stdout();
+    //     if conf.viuer_config.restore_cursor {
+    //         execute!(&mut stdout, crossterm::cursor::SavePosition)?;
+    //     }
+    //     let s = std::string::String::from(filename);
 
-        thread::spawn(move || -> ViuResult<(u32, u32)> {
-            viuer::print_sixel_from_file(s.as_str())
-        });
-        loop {
-            thread::sleep(std::time::Duration::from_millis(100));
-            if rx.try_recv().is_ok() {
-                break;
-            };
-        }
-        if conf.viuer_config.restore_cursor {
-            execute!(&mut stdout, crossterm::cursor::RestorePosition)?;
-        };
+    //     thread::spawn(move || -> ViuResult<(u32, u32)> {
+    //         viuer::print_sixel_from_file(s.as_str())
+    //     });
+    //     loop {
+    //         thread::sleep(std::time::Duration::from_millis(100));
+    //         if rx.try_recv().is_ok() {
+    //             break;
+    //         };
+    //     }
+    //     if conf.viuer_config.restore_cursor {
+    //         execute!(&mut stdout, crossterm::cursor::RestorePosition)?;
+    //     };
 
-        //TODO delete tmpfile
-        return tx.send(true).map_err(|_| {
-            Error::new(ErrorKind::Other, "Could not send signal to clean up.").into()
-        });
-    } else {
+    //     //TODO delete tmpfile
+    //     return tx.send(true).map_err(|_| {
+    //         Error::new(ErrorKind::Other, "Could not send signal to clean up.").into()
+    //     });
+    // } 
+    else {
         let result = try_print_gif(conf, BufReader::new(file_in), (tx, rx));
         //the provided image is not a gif so try to view it
         if result.is_err() {
