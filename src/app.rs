@@ -166,7 +166,7 @@ fn view_file(conf: &Config, filename: &str, (tx, rx): TxRx) -> ViuResult {
     //     return tx.send(true).map_err(|_| {
     //         Error::new(ErrorKind::Other, "Could not send signal to clean up.").into()
     //     });
-    // } 
+    // }
     else {
         let result = try_print_gif(conf, BufReader::new(file_in), (tx, rx));
         //the provided image is not a gif so try to view it
